@@ -1,15 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { db, auth } from "../firebase";
 import { collection, addDoc, serverTimestamp, updateDoc, doc } from "firebase/firestore";
 
 export default function PaymentPortal({ profile, onClose, onSuccess }) {
-  const [paymentMethod, setPaymentMethod] = useState(""); // "", "online", "qr"
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMode, setSuccessMode] = useState(false);
   const [mockOrder, setMockOrder] = useState(null);
-  const [txnId, setTxnId] = useState("");
-  const [qrSubmitted, setQrSubmitted] = useState(false);
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -24,6 +21,7 @@ export default function PaymentPortal({ profile, onClose, onSuccess }) {
   const handlePayment = async () => {
     setLoading(true);
     setError("");
+    setMockOrder(null);
 
     const res = await loadRazorpayScript();
     if (!res) {
@@ -107,6 +105,12 @@ export default function PaymentPortal({ profile, onClose, onSuccess }) {
         },
         theme: {
           color: "#7c3aed"
+        },
+        modal: {
+          ondismiss: function() {
+            setError("Payment cancelled by user.");
+            setLoading(false);
+          }
         }
       };
 
@@ -179,47 +183,9 @@ export default function PaymentPortal({ profile, onClose, onSuccess }) {
     }
   };
 
-  const handleQrSubmit = async (e) => {
-    e.preventDefault();
-    if (!txnId.trim()) {
-      setError("Please enter a valid Transaction / UTR ID");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const userId = auth.currentUser?.uid;
-      if (userId) {
-        // Automatically upgrade the user plan instantly!
-        await updateDoc(doc(db, "users", userId), {
-          plan: "paid"
-        });
-
-        // Add an approved payment record
-        await addDoc(collection(db, "paymentRequests"), {
-          uid: userId,
-          studentName: profile?.name || auth.currentUser?.displayName || "Student",
-          amount: 199,
-          status: "approved",
-          txnId: txnId,
-          createdAt: serverTimestamp(),
-        });
-      }
-
-      setQrSubmitted(true);
-      setTimeout(() => {
-        if (onSuccess) onSuccess();
-        onClose();
-      }, 2000);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to verify transaction ID. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    handlePayment();
+  }, []);
 
   return (
     <>
@@ -231,41 +197,8 @@ export default function PaymentPortal({ profile, onClose, onSuccess }) {
         .pp-btn{width:100%;padding:14px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;border-radius:14px;color:#fff;font-weight:700;font-size:15px;cursor:pointer;transition:all 0.25s ease;font-family:inherit;margin-top:20px;box-shadow: 0 4px 15px rgba(124,58,237,0.3);}
         .pp-btn:hover:not(:disabled){opacity:0.95;transform:translateY(-1px);box-shadow: 0 6px 20px rgba(124,58,237,0.4);}
         .pp-btn:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none;}
-        
-        .pp-choice-card {
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 16px;
-          padding: 16px;
-          background: rgba(255,255,255,0.02);
-          cursor: pointer;
-          transition: all 0.25s ease;
-          text-align: left;
-          position: relative;
-          overflow: hidden;
-        }
-        .pp-choice-card:hover {
-          background: rgba(124, 58, 237, 0.06);
-          border-color: rgba(124, 58, 237, 0.4);
-          transform: translateY(-2px);
-          box-shadow: 0 8px 24px rgba(124,58,237,0.15);
-        }
-        .pp-input {
-          width: 100%;
-          padding: 12px 16px;
-          border-radius: 12px;
-          border: 1px solid rgba(255,255,255,0.12);
-          background: rgba(255,255,255,0.04);
-          color: #fff;
-          font-size: 14px;
-          font-family: var(--font-mono);
-          outline: none;
-          transition: all 0.2s;
-        }
-        .pp-input:focus {
-          border-color: var(--violet);
-          background: rgba(124,58,237,0.03);
-          box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
-        }
+        .pp-spinner{width:44px;height:44px;border:3px solid rgba(124,58,237,0.15);border-top-color:#7c3aed;border-radius:50%;animation:ppSpin 0.8s linear infinite;}
+        @keyframes ppSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
       `}</style>
 
       <div className="pp-overlay" onClick={(e) => { if (e.target === e.currentTarget && !loading) onClose(); }}>
@@ -275,14 +208,6 @@ export default function PaymentPortal({ profile, onClose, onSuccess }) {
               <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(34,197,94,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", color: "#22c55e", fontSize: 24 }}>✓</div>
               <h3 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 12px", color: "#f1f5f9" }}>Payment Successful!</h3>
               <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, margin: "0 0 20px" }}>Your account has been upgraded to Premium.</p>
-            </>
-          ) : qrSubmitted ? (
-            <>
-              <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(34,197,94,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", color: "#22c55e", fontSize: 24 }}>✓</div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 12px", color: "#f1f5f9" }}>Payment Verified!</h3>
-              <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, margin: "0 0 20px", lineHeight: 1.6 }}>
-                Thank you! Your transaction has been recorded. Your account has been upgraded to Premium successfully!
-              </p>
             </>
           ) : mockOrder ? (
             <>
@@ -326,99 +251,30 @@ export default function PaymentPortal({ profile, onClose, onSuccess }) {
                 </button>
               </div>
             </>
-          ) : paymentMethod === "qr" ? (
+          ) : error ? (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-                <button onClick={() => setPaymentMethod("")} style={{ background: "none", border: "none", color: "var(--text3)", cursor: "pointer", fontSize: 18, padding: 0 }}>←</button>
-                <h3 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: "#f1f5f9" }}>Scan QR to Pay</h3>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <h3 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: "#f87171" }}>Payment Cancelled / Failed</h3>
+                <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text3)", cursor: "pointer", fontSize: 20 }}>×</button>
               </div>
-              
-              <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, margin: "0 0 16px", lineHeight: 1.5 }}>
-                Scan the QR code below using Google Pay, PhonePe, Paytm, or any UPI app to pay ₹199.
+              <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, margin: "0 0 20px", lineHeight: 1.5 }}>
+                {error}
               </p>
-
-              {/* DYNAMIC QR CODE FOR USER'S CUSTOM PAYLINK */}
-              <div style={{ background: "#fff", padding: 12, borderRadius: 18, display: "inline-block", marginBottom: 16, boxShadow: "0 8px 30px rgba(0,0,0,0.3)" }}>
-                <img 
-                  src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://razorpay.me/@ayushman830&color=0a0d1a" 
-                  alt="Payment QR Code" 
-                  style={{ display: "block", width: 180, height: 180 }}
-                />
-              </div>
-
-              <div style={{ marginBottom: 20 }}>
-                <a 
-                  href="https://razorpay.me/@ayushman830" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ display: "inline-block", color: "var(--cyan)", textDecoration: "none", fontSize: 13, fontWeight: 700, background: "rgba(0,229,255,0.06)", border: "1px solid rgba(0,229,255,0.2)", borderRadius: 10, padding: "8px 16px", transition: "all 0.2s" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,229,255,0.15)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,229,255,0.06)"; }}
-                >
-                  🔗 Open Direct Payment Link
-                </a>
-              </div>
-
-              <form onSubmit={handleQrSubmit} style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 18, textAlign: "left" }}>
-                <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8, fontFamily: "var(--font-mono)" }}>
-                  Transaction UTR / Ref No.
-                </label>
-                <input 
-                  type="text" 
-                  className="pp-input"
-                  placeholder="Enter 12-digit UTR number" 
-                  value={txnId} 
-                  onChange={e => setTxnId(e.target.value)} 
-                />
-                
-                {error && <div style={{ color: "#f87171", fontSize: 13, marginTop: 8 }}>{error}</div>}
-                
-                <button type="submit" className="pp-btn" disabled={loading} style={{ marginTop: 14 }}>
-                  {loading ? "Submitting..." : "Submit Transaction ID"}
+              <div style={{ display: "flex", gap: 12 }}>
+                <button className="pp-btn" style={{ marginTop: 0, flex: 1 }} onClick={handlePayment}>
+                  Try Again
                 </button>
-              </form>
+                <button className="pp-btn" style={{ marginTop: 0, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", flex: 1, boxShadow: "none" }} onClick={onClose}>
+                  Close
+                </button>
+              </div>
             </>
           ) : (
             <>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-                <h3 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: "#f1f5f9" }}>Premium Upgrade</h3>
-                <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text3)", cursor: "pointer", fontSize: 20 }}>×</button>
-              </div>
-
-              <div style={{ background: "rgba(124,58,237,0.03)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: 20, padding: 18, marginBottom: 24 }}>
-                <div style={{ fontSize: 28, fontWeight: 700, color: "var(--cyan)" }}>₹199</div>
-                <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>Unlock all study materials, priority doubt chats & live classes</div>
-              </div>
-
-              {error && <div style={{ color: "#f87171", fontSize: 13, marginBottom: 16 }}>{error}</div>}
-              {loading && <div style={{ color: "#00e5ff", fontSize: 13, marginBottom: 16, fontWeight: 500 }}>Initializing secure gateway...</div>}
-
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <div 
-                  className="pp-choice-card" 
-                  onClick={loading ? null : handlePayment}
-                  style={{ opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer" }}
-                >
-                  <div style={{ fontWeight: 700, color: "#fff", fontSize: 15, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
-                    💳 Pay Online (Standard Gateway)
-                  </div>
-                  <div style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.4 }}>
-                    Pay using card, net banking, or official UPI. Instant automatic account activation.
-                  </div>
-                </div>
-
-                <div 
-                  className="pp-choice-card" 
-                  onClick={loading ? null : () => setPaymentMethod("qr")}
-                  style={{ opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer" }}
-                >
-                  <div style={{ fontWeight: 700, color: "#fff", fontSize: 15, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
-                    📱 Pay via QR Code / Direct Link
-                  </div>
-                  <div style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.4 }}>
-                    Scan QR to pay directly to <span style={{ color: "var(--cyan)", fontFamily: "var(--font-mono)" }}>@ayushman830</span>. Activated after submitting Transaction ID.
-                  </div>
-                </div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "20px 0" }}>
+                <div className="pp-spinner" style={{ marginBottom: 20 }}></div>
+                <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 8px", color: "#f1f5f9" }}>Connecting to secure gateway...</h3>
+                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, margin: 0 }}>Please do not close this window</p>
               </div>
             </>
           )}
