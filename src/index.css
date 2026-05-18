@@ -1,31 +1,34 @@
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,slnt,wdth,wght,ROND@8..144,-10..0,25..150,400..700,0..100&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg:        #07080f;
-  --bg2:       #0d0f1a;
-  --bg3:       #12152a;
-  --surface:   rgba(255,255,255,0.04);
-  --border:    rgba(255,255,255,0.08);
-  --border2:   rgba(255,255,255,0.14);
+  --bg:        #060814;
+  --bg2:       #0b0d1e;
+  --bg3:       #11142d;
+  --surface:   rgba(255,255,255,0.03);
+  --border:    rgba(255,255,255,0.06);
+  --border2:   rgba(255,255,255,0.12);
 
-  --cyan:      #00e5ff;
-  --cyan2:     #00b8d9;
-  --purple:    #7c3aed;
-  --purple2:   #a855f7;
-  --purple3:   #c084fc;
+  --cyan:      #00f0ff;
+  --cyan2:     #00c8ff;
+  --purple:    #8b5cf6;
+  --purple2:   #a78bfa;
+  --purple3:   #c4b5fd;
 
-  --text:      #e2e8f0;
-  --text2:     #94a3b8;
-  --text3:     #475569;
+  --text:      #f8fafc;
+  --text2:     #cbd5e1;
+  --text3:     #64748b;
 
-  --grad:      linear-gradient(135deg, #7c3aed, #00e5ff);
-  --grad2:     linear-gradient(135deg, #a855f7, #00b8d9);
+  --grad:      linear-gradient(135deg, #8b5cf6, #00f0ff);
+  --grad2:     linear-gradient(135deg, #a78bfa, #00c8ff);
 
-  --font-head: 'Clash Display', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-head: 'Google Sans Flex', sans-serif;
+  --font-body: 'Google Sans Flex', sans-serif;
+  --font-mono: 'Space Mono', monospace;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -35,6 +38,12 @@ html, body { overflow-x:hidden; }
 
 body {
   background: var(--bg);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(0, 240, 255, 0.05) 0px, transparent 50%),
+    linear-gradient(rgba(255, 255, 255, 0.007) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.007) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
   color: var(--text);
   font-family: var(--font-body);
   min-height: 100vh;
@@ -43,7 +52,7 @@ body {
 
 #root { width:100%; min-height:100vh; }
 
-h1,h2,h3,h4 { font-family: var(--font-head); color: var(--text); }
+h1,h2,h3,h4 { font-family: var(--font-head); color: var(--text); font-weight: 700; letter-spacing: -0.01em; }
 
 ::-webkit-scrollbar { width:5px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -55,6 +64,7 @@ h1,h2,h3,h4 { font-family: var(--font-head); color: var(--text); }
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  font-weight: 800;
 }
 
 .grad-btn {
@@ -65,25 +75,34 @@ h1,h2,h3,h4 { font-family: var(--font-head); color: var(--text); }
   font-family: var(--font-body);
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.25);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.grad-btn:hover { opacity:0.88; transform:translateY(-1px); }
+.grad-btn:hover { opacity:0.95; transform:translateY(-1px); box-shadow: 0 6px 24px rgba(139, 92, 246, 0.35); }
 .grad-btn:active { transform:translateY(0); }
-.grad-btn:disabled { opacity:0.5; cursor:not-allowed; }
+.grad-btn:disabled { opacity:0.5; cursor:not-allowed; box-shadow:none; }
 
 .glass {
-  background: var(--surface);
+  background: rgba(11, 13, 30, 0.45);
   border: 1px solid var(--border);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .card {
-  background: var(--surface);
+  background: rgba(11, 13, 30, 0.45);
   border: 1px solid var(--border);
-  border-radius: 18px;
-  transition: border-color 0.25s;
+  border-radius: 20px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
 }
-.card:hover { border-color: var(--border2); }
+.card:hover { 
+  border-color: rgba(0, 240, 255, 0.35); 
+  box-shadow: 0 12px 40px rgba(0, 240, 255, 0.12), 0 0 0 1px rgba(0, 240, 255, 0.05); 
+  transform: translateY(-2px);
+}
 
 .input-field {
   width: 100%;
