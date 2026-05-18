@@ -326,25 +326,6 @@ export default function PaymentPortal({ profile, onClose, onSuccess }) {
                 </button>
               </div>
             </>
-          ) : paymentMethod === "online" ? (
-            <>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-                <button onClick={() => setPaymentMethod("")} style={{ background: "none", border: "none", color: "var(--text3)", cursor: "pointer", fontSize: 18, padding: 0 }}>←</button>
-                <h3 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: "#f1f5f9" }}>Online Checkout</h3>
-              </div>
-              <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, margin: "0 0 20px" }}>Upgrade to Saint Academy Premium for just ₹199 to unlock all features.</p>
-              
-              <div style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.2)", padding: 16, borderRadius: 16, display: "inline-block", marginBottom: 20 }}>
-                <div style={{ fontSize: 32, fontWeight: 700, color: "var(--cyan)" }}>₹199</div>
-                <div style={{ fontSize: 12, color: "var(--text3)" }}>One-time payment</div>
-              </div>
-
-              {error && <div style={{ color: "#f87171", fontSize: 13, marginBottom: 10 }}>{error}</div>}
-
-              <button className="pp-btn" onClick={handlePayment} disabled={loading}>
-                {loading ? "Processing..." : "Pay with Razorpay"}
-              </button>
-            </>
           ) : paymentMethod === "qr" ? (
             <>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
@@ -409,8 +390,15 @@ export default function PaymentPortal({ profile, onClose, onSuccess }) {
                 <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>Unlock all study materials, priority doubt chats & live classes</div>
               </div>
 
+              {error && <div style={{ color: "#f87171", fontSize: 13, marginBottom: 16 }}>{error}</div>}
+              {loading && <div style={{ color: "#00e5ff", fontSize: 13, marginBottom: 16, fontWeight: 500 }}>Initializing secure gateway...</div>}
+
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <div className="pp-choice-card" onClick={() => setPaymentMethod("online")}>
+                <div 
+                  className="pp-choice-card" 
+                  onClick={loading ? null : handlePayment}
+                  style={{ opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer" }}
+                >
                   <div style={{ fontWeight: 700, color: "#fff", fontSize: 15, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
                     💳 Pay Online (Standard Gateway)
                   </div>
@@ -419,7 +407,11 @@ export default function PaymentPortal({ profile, onClose, onSuccess }) {
                   </div>
                 </div>
 
-                <div className="pp-choice-card" onClick={() => setPaymentMethod("qr")}>
+                <div 
+                  className="pp-choice-card" 
+                  onClick={loading ? null : () => setPaymentMethod("qr")}
+                  style={{ opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer" }}
+                >
                   <div style={{ fontWeight: 700, color: "#fff", fontSize: 15, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
                     📱 Pay via QR Code / Direct Link
                   </div>
