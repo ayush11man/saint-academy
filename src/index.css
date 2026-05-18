@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,slnt,wdth,wght,ROND@8..144,-10..0,25..150,400..700,0..100&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Space+Grotesk:wght@300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -26,8 +25,8 @@
   --grad:      linear-gradient(135deg, #8b5cf6, #00f0ff);
   --grad2:     linear-gradient(135deg, #a78bfa, #00c8ff);
 
-  --font-head: 'Google Sans Flex', sans-serif;
-  --font-body: 'Google Sans Flex', sans-serif;
+  --font-head: 'Space Grotesk', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
   --font-mono: 'Space Mono', monospace;
 }
 
@@ -167,3 +166,137 @@ h1,h2,h3,h4 { font-family: var(--font-head); color: var(--text); font-weight: 70
 
 .animate-fadeUp { animation: fadeUp 0.5s ease forwards; }
 .animate-fadeIn { animation: fadeIn 0.3s ease forwards; }
+
+/* ── INTERACTIVE ANTIGRAVITY MICRO-INTERACTIONS ── */
+
+/* Staggered Text Reveal Animations */
+@keyframes revealText {
+  from {
+    transform: translateY(110%) rotate(4deg);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.reveal-word-wrap {
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: bottom;
+  padding-bottom: 4px;
+}
+
+.reveal-word {
+  display: inline-block;
+  animation: revealText 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+/* Spotlight Glowing Interactive Card */
+.spotlight-card {
+  position: relative;
+  background: rgba(11, 13, 30, 0.45);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.spotlight-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(0, 240, 255, 0.2);
+}
+
+/* Mouse-glowing border container */
+.spotlight-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    400px circle at var(--mouse-x, 0px) var(--mouse-y, 0px),
+    rgba(0, 240, 255, 0.3),
+    rgba(139, 92, 246, 0.1) 40%,
+    transparent 80%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 2;
+}
+
+.spotlight-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    300px circle at var(--mouse-x, 0px) var(--mouse-y, 0px),
+    rgba(0, 240, 255, 0.03),
+    transparent 60%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 1;
+}
+
+.spotlight-card:hover::before,
+.spotlight-card:hover::after {
+  opacity: 1;
+}
+
+/* Magnetic alive buttons */
+.magnetic-btn {
+  position: relative;
+  transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.25);
+}
+
+.magnetic-btn::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.5s ease-out;
+  pointer-events: none;
+}
+
+.magnetic-btn:hover {
+  transform: scale(1.03) translateY(-1.5px);
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.45);
+}
+
+.magnetic-btn:hover::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.magnetic-btn:active {
+  transform: scale(0.98) translateY(0);
+}
+
+/* Scroll-triggered reveal state */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scroll-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}

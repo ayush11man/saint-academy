@@ -85,6 +85,22 @@ export default function StudentDashboard({ user, profile: initProfile, onLogout 
   }, [user]);
 
   useEffect(() => { if (user) loadAll(); }, [user]);
+
+  // ── HOOK: SPOTLIGHT MOUSE COORDINATES ──
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      const cards = document.querySelectorAll(".spotlight-card");
+      cards.forEach((card) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        card.style.setProperty("--mouse-x", `${x}px`);
+        card.style.setProperty("--mouse-y", `${y}px`);
+      });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
   useEffect(() => {
     const check = () => {
       if (profile?.cls) {
@@ -327,13 +343,13 @@ export default function StudentDashboard({ user, profile: initProfile, onLogout 
             <div style={{ width: "240px", flexShrink: 0, position: "sticky", top: "24px" }}>
               <p style={{fontSize:11,fontWeight:700,color:"var(--text2)",fontFamily:"var(--font-mono)",textTransform:"uppercase",letterSpacing:"0.08em",margin:"0 0 16px"}}>Subjects</p>
               <div style={{display:"flex",flexDirection:"column",gap:12}}>
-                {SUBJECTS.map(subj=>{
+                 {SUBJECTS.map(subj=>{
                   const meta=SUBJECT_META[subj];
                   const count=(material[subj]||[]).length;
                   const isActive=activeSubj===subj;
                   return(
-                    <div key={subj} className="subj-tile" onClick={()=>{setActiveSubj(isActive?null:subj);setActiveHW(null);}}
-                      style={{padding:"16px",borderColor:isActive?meta.color:"var(--border)",borderWidth:isActive?2:1,boxShadow:isActive?`0 0 24px ${meta.color}20`:"none"}}>
+                    <div key={subj} className="subj-tile spotlight-card" onClick={()=>{setActiveSubj(isActive?null:subj);setActiveHW(null);}}
+                      style={{padding:"16px",borderColor:isActive?meta.color:"rgba(255,255,255,0.06)",borderWidth:isActive?2:1,boxShadow:isActive?`0 0 24px ${meta.color}20`:"none"}}>
                       <div style={{position:"absolute",top:-10,right:-10,width:50,height:50,borderRadius:"50%",background:`${meta.color}10`,pointerEvents:"none"}}/>
                       <div style={{display:"flex", alignItems:"center", gap:"14px"}}>
                         <div style={{fontSize:24}}>{meta.icon}</div>
@@ -354,7 +370,7 @@ export default function StudentDashboard({ user, profile: initProfile, onLogout 
               {/* TIMETABLE (Always visible if no active subject) */}
               {!activeSubj && (
                 <div style={{marginBottom:28}}>
-                  <div style={{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:18,padding:"24px",overflowX:"auto",animation:"fadeUp 0.3s ease", boxShadow:"0 4px 20px rgba(0,0,0,0.2)"}}>
+                  <div className="spotlight-card" style={{padding:"24px",overflowX:"auto",animation:"fadeUp 0.3s ease"}}>
                     <p style={{fontSize:14,fontWeight:700,color:"var(--text)",fontFamily:"var(--font-head)",margin:"0 0 16px"}}>
                       Class {profile?.cls} Weekly Timetable
                     </p>
@@ -488,14 +504,14 @@ export default function StudentDashboard({ user, profile: initProfile, onLogout 
                 </div>
               </div>
 
-              {/* FREE — NCERT */}
+               {/* FREE — NCERT */}
               <p style={{fontSize:11,fontWeight:700,color:"var(--text2)",fontFamily:"var(--font-mono)",textTransform:"uppercase",letterSpacing:"0.06em",margin:"0 0 10px"}}>Free — NCERT Resources</p>
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:12,marginBottom:20}}>
                 {[
                   {label:"NCERT Textbook",desc:`Official Class ${profile?.cls} textbook`,icon:"📖",link:NCERT_TEXTBOOKS[activeSubj]?.[profile?.cls]},
                   {label:"NCERT Solutions",desc:"Chapter-wise Q&A",icon:"📝",link:NCERT_SOLUTIONS[activeSubj]?.[profile?.cls]},
                 ].map(r=>(
-                  <div key={r.label} className="mat-card">
+                  <div key={r.label} className="mat-card spotlight-card">
                     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
                       <div style={{width:38,height:38,borderRadius:10,background:`${SUBJECT_META[activeSubj].color}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{r.icon}</div>
                       <div>
@@ -575,7 +591,7 @@ export default function StudentDashboard({ user, profile: initProfile, onLogout 
                           const due=new Date(h.dueDate);const over=due<new Date();
                           const isSelected=activeHW?.id===h.id;
                           return(
-                            <div key={h.id} className="hw-row" onClick={()=>setActiveHW(isSelected?null:h)}
+                            <div key={h.id} className="hw-row spotlight-card" onClick={()=>setActiveHW(isSelected?null:h)}
                               style={{borderColor:isSelected?"var(--purple2)":"var(--border)"}}>
                               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:16}}>
                                 <div>
@@ -804,7 +820,7 @@ export default function StudentDashboard({ user, profile: initProfile, onLogout 
               </div>
             </div>
           )}
-          <button className="chat-fab" onClick={()=>{setChatOpen(!chatOpen);setDoubtOpen(false);}} title="AI Assistant">
+          <button className="chat-fab magnetic-btn" onClick={()=>{setChatOpen(!chatOpen);setDoubtOpen(false);}} title="AI Assistant">
             {chatOpen?"✕":"✦"}
           </button>
         </>
@@ -825,7 +841,7 @@ export default function StudentDashboard({ user, profile: initProfile, onLogout 
 
 function MatCard({item,color,isPremium}){
   return(
-    <div className="mat-card" style={{borderColor:isPremium?"rgba(124,58,237,0.2)":"var(--border)"}}>
+    <div className="mat-card spotlight-card" style={{borderColor:isPremium?"rgba(124,58,237,0.2)":"rgba(255,255,255,0.06)"}}>
       {isPremium&&<div style={{display:"inline-block",fontSize:10,fontWeight:700,color:"var(--purple3)",fontFamily:"var(--font-mono)",background:"rgba(124,58,237,0.1)",padding:"2px 8px",borderRadius:6,marginBottom:8}}>PREMIUM</div>}
       {item.chapter&&<div style={{display:"inline-block",fontSize:10,fontWeight:700,color:"var(--purple3)",fontFamily:"var(--font-mono)",background:"rgba(124,58,237,0.08)",padding:"2px 8px",borderRadius:6,marginBottom:6,marginLeft:isPremium?6:0}}>{item.chapter}</div>}
       <p style={{margin:"0 0 4px",fontWeight:700,fontSize:15,color:"var(--text)",fontFamily:"var(--font-head)"}}>{item.title}</p>
